@@ -134,5 +134,21 @@ namespace Lista_Telefonica
                 GridFill();
             }
         }
+
+        private void btnDelete_Click(object sender, EventArgs e)
+        {
+            using (MySqlConnection mySqlConnection = new MySqlConnection(connectionString))
+            {
+                mySqlConnection.Open();
+                MySqlCommand comm = mySqlConnection.CreateCommand();
+                comm.CommandText = "DELETE from phonebook WHERE PhoneBookID = @pbID";
+                comm.Parameters.AddWithValue("@pbID", PhoneBookID);
+                comm.ExecuteNonQuery();
+                mySqlConnection.Close();
+                MessageBox.Show("Apagado com sucesso");
+                Clear();
+                GridFill();
+            }
+        }
     }
 }
