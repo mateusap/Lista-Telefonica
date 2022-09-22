@@ -16,7 +16,7 @@ namespace Lista_Telefonica
 {
     public partial class Form1 : Form
     {
-        string connectionString = "server=localhost;userid=Dev;password=lang6996A@;database=phonebookdb";
+        string connectionString = "server=localhost;userid=root;password=;database=phonebookdb";
         int PhoneBookID = 0;
         public Form1()
         {
@@ -25,7 +25,9 @@ namespace Lista_Telefonica
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
+            GridFill();
+            btnDelete.Enabled = false;
+            btnUpdate.Enabled = false;
         }
 
         private void lblFooter_Click(object sender, EventArgs e)
@@ -44,16 +46,19 @@ namespace Lista_Telefonica
                     using (MySqlConnection mySqlConnection = new MySqlConnection(connectionString))
                     {
                         mySqlConnection.Open();
-                        MySqlCommand mySqlCommand = new MySqlCommand("ContactAddOrEdit", mySqlConnection);
-                        mySqlCommand.CommandType = CommandType.StoredProcedure;
-                        mySqlCommand.Parameters.AddWithValue("@PhoneBookID", PhoneBookID);
-                        mySqlCommand.Parameters.AddWithValue("@FirstName", txtBoxName.Text.Trim());
-                        mySqlCommand.Parameters.AddWithValue("@LastName", txtBoxLast.Text.Trim());
-                        mySqlCommand.Parameters.AddWithValue("@Contact", txtBoxContact.Text.Trim());
-                        mySqlCommand.Parameters.AddWithValue("@Email", txtBoxEmail.Text.Trim());
-                        mySqlCommand.Parameters.AddWithValue("@Adress", txtBoxAdress.Text.Trim());
-                        mySqlCommand.ExecuteNonQuery();
+                        MySqlCommand comm = mySqlConnection.CreateCommand();
+                        comm.CommandText = "INSERT INTO phonebook(PhoneBookID,FirstName,LastName,Contact,Email,Adress) VALUES (@pbID,@first,@last,@contact,@email,@adress)";
+                        comm.Parameters.AddWithValue("@pbID", PhoneBookID);
+                        comm.Parameters.AddWithValue("@first", txtBoxName.Text);
+                        comm.Parameters.AddWithValue("@last", txtBoxLast.Text);
+                        comm.Parameters.AddWithValue("@contact", txtBoxContact.Text);
+                        comm.Parameters.AddWithValue("@email", txtBoxEmail.Text);
+                        comm.Parameters.AddWithValue("@adress", txtBoxAdress.Text);
+                        comm.ExecuteNonQuery();
+                        mySqlConnection.Close();
                         MessageBox.Show("Dados enviados com sucesso");
+                        Clear();
+                        GridFill();
                     }
                 }
                 else
@@ -62,9 +67,72 @@ namespace Lista_Telefonica
                 }
             }
             else
-                {
-                    MessageBox.Show("Preencha os campos obrigatórios");
-                }
+            {
+                MessageBox.Show("Preencha os campos obrigatórios");
+            }
+        }
+        void Clear()
+        {
+            txtBoxAdress.Text = txtBoxContact.Text = txtBoxEmail.Text = txtBoxLast.Text = txtBoxName.Text = txtBoxSearch.Text = "";
+            PhoneBookID = 0;
+            btnSave.Text = "Salvar";
+            btnDelete.Enabled = false;
+            btnUpdate.Enabled = false;
+        }
+
+        private void btnClear_Click(object sender, EventArgs e)
+        {
+            Clear();
+        }
+        void GridFill()
+        {
+            using (MySqlConnection conn = new MySqlConnection(connectionString))
+            {
+                conn.Open();
+                MySqlDataAdapter mySqlDataAdapter = new MySqlDataAdapter("ContactViewAll", conn);
+                mySqlDataAdapter.SelectCommand.CommandType = CommandType.StoredProcedure;
+                DataTable dataTable = new DataTable();
+                mySqlDataAdapter.Fill(dataTable);
+                dataGridView1.DataSource = dataTable;
+            }
+        }
+
+        private void dataGridView1_DoubleClick(object sender, EventArgs e)
+        {
+            if (dataGridView1.CurrentRow.Index != -1)
+            {
+                txtBoxName.Text = dataGridView1.CurrentRow.Cells[1].Value.ToString();
+                txtBoxLast.Text = dataGridView1.CurrentRow.Cells[2].Value.ToString();
+                txtBoxContact.Text = dataGridView1.CurrentRow.Cells[3].Value.ToString();
+                txtBoxEmail.Text = dataGridView1.CurrentRow.Cells[4].Value.ToString();
+                txtBoxAdress.Text = dataGridView1.CurrentRow.Cells[5].Value.ToString();
+                PhoneBookID = Convert.ToInt32(dataGridView1.CurrentRow.Cells[0].Value.ToString());
+                btnSave.Enabled = false;
+                btnDelete.Enabled = true;
+                btnUpdate.Enabled = true;
+            }
+        }
+
+        private void btnUpdate_Click(object sender, EventArgs e)
+        {
+            using (MySqlConnection mySqlConnection = new MySqlConnection(connectionString))
+            {
+                mySqlConnection.Open();
+                MySqlCommand comm = mySqlConnection.CreateCommand();
+                comm.CommandText = "UPDATE phonebook SET FirstName =@first, LastName =@last, Contact =@contact, Email = @email, Adress = @adress WHERE PhoneBookID = @pbID";
+                comm.Parameters.AddWithValue("@first", txtBoxName.Text);
+                comm.Parameters.AddWithValue("@last", txtBoxLast.Text);
+                comm.Parameters.AddWithValue("@contact", txtBoxContact.Text);
+                comm.Parameters.AddWithValue("@email", txtBoxEmail.Text);
+                comm.Parameters.AddWithValue("@adress", txtBoxAdress.Text);
+                comm.Parameters.AddWithValue("@pbID", PhoneBookID);
+                //comm.CommandText = "UPDATE phonebook SET FirstName = '"+txtBoxName.Text+"',LastName = '"+txtBoxLast.Text + "',Contact = '" + txtBoxContact.Text + "',Email = '" + txtBoxEmail.Text + "',Adress = '" + txtBoxAdress.Text +"' WHERE PhoneBookID ='" +PhoneBookID+"'";
+                comm.ExecuteNonQuery();
+                mySqlConnection.Close();
+                MessageBox.Show("Dados atualizados com sucesso");
+                Clear();
+                GridFill();
             }
         }
     }
+}
