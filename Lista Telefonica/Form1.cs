@@ -83,13 +83,14 @@ namespace Lista_Telefonica
         private void btnClear_Click(object sender, EventArgs e)
         {
             Clear();
+            btnSave.Enabled = true;
         }
         void GridFill()
         {
-            using (MySqlConnection conn = new MySqlConnection(connectionString))
+            using (MySqlConnection mySqlConnection = new MySqlConnection(connectionString))
             {
-                conn.Open();
-                MySqlDataAdapter mySqlDataAdapter = new MySqlDataAdapter("ContactViewAll", conn);
+                mySqlConnection.Open();
+                MySqlDataAdapter mySqlDataAdapter = new MySqlDataAdapter("ContactViewAll", mySqlConnection);
                 mySqlDataAdapter.SelectCommand.CommandType = CommandType.StoredProcedure;
                 DataTable dataTable = new DataTable();
                 mySqlDataAdapter.Fill(dataTable);
@@ -111,6 +112,7 @@ namespace Lista_Telefonica
                 btnDelete.Enabled = true;
                 btnUpdate.Enabled = true;
             }
+            
         }
 
         private void btnUpdate_Click(object sender, EventArgs e)
@@ -126,7 +128,6 @@ namespace Lista_Telefonica
                 comm.Parameters.AddWithValue("@email", txtBoxEmail.Text);
                 comm.Parameters.AddWithValue("@adress", txtBoxAdress.Text);
                 comm.Parameters.AddWithValue("@pbID", PhoneBookID);
-                //comm.CommandText = "UPDATE phonebook SET FirstName = '"+txtBoxName.Text+"',LastName = '"+txtBoxLast.Text + "',Contact = '" + txtBoxContact.Text + "',Email = '" + txtBoxEmail.Text + "',Adress = '" + txtBoxAdress.Text +"' WHERE PhoneBookID ='" +PhoneBookID+"'";
                 comm.ExecuteNonQuery();
                 mySqlConnection.Close();
                 MessageBox.Show("Dados atualizados com sucesso");
@@ -148,6 +149,21 @@ namespace Lista_Telefonica
                 MessageBox.Show("Apagado com sucesso");
                 Clear();
                 GridFill();
+            }
+        }
+
+        private void txtBoxSearch_TextChanged(object sender, EventArgs e)
+        {
+            using (MySqlConnection mySqlConnection = new MySqlConnection(connectionString))
+            {
+                mySqlConnection.Open();
+                MySqlCommand comm = mySqlConnection.CreateCommand();
+                comm.CommandText = "SELECT * from phonebook WHERE FirstName like @search OR LastName like @search";
+                comm.Parameters.AddWithValue("@search","%"+txtBoxSearch.Text+"%");
+                MySqlDataAdapter mysqdata = new MySqlDataAdapter(comm);
+                DataTable datatb = new DataTable();
+                mysqdata.Fill(datatb);
+                dataGridView1.DataSource = datatb;
             }
         }
     }

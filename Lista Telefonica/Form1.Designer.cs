@@ -178,8 +178,9 @@
             // 
             this.txtBoxSearch.Location = new System.Drawing.Point(388, 38);
             this.txtBoxSearch.Name = "txtBoxSearch";
-            this.txtBoxSearch.Size = new System.Drawing.Size(140, 20);
+            this.txtBoxSearch.Size = new System.Drawing.Size(266, 20);
             this.txtBoxSearch.TabIndex = 14;
+            this.txtBoxSearch.TextChanged += new System.EventHandler(this.txtBoxSearch_TextChanged);
             // 
             // lblSearch
             // 
